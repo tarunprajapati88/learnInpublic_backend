@@ -1,8 +1,8 @@
 
 import {config} from "dotenv";
 config();
-import {connectDB} from "./db/db.ts";
-import {app} from "./app.ts";
+import {connectDB} from "./db/db.js";
+import {app} from "./app.js";
 
 
 connectDB().then(() => {

@@ -4,7 +4,7 @@ import { config } from "dotenv";
 config();
 
 import mongoose from "mongoose";
-import { app } from "../src/app.ts";
+import { app } from "../src/app.js";
 
 let isConnected = false;
 

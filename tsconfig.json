@@ -18,8 +18,8 @@
     "noUncheckedSideEffectImports": true,
     "moduleDetection": "force",
     "skipLibCheck": true,
-    "allowImportingTsExtensions": true,
-    "emitDeclarationOnly": true
+   // "allowImportingTsExtensions": true,
+   // "emitDeclarationOnly": true
   },
   "include": ["src/**/*", "api/**/*"],
   "exclude": ["node_modules", "dist"]

@@ -1,11 +1,11 @@
 // src/controllers/post.controller.ts
 
 import { Request, Response } from 'express';
-import { asyncHandler } from '../utils/AsyncHandler.ts';
-import { ApiError } from '../utils/ApiError.ts';
-import { ApiResponse } from '../utils/ApiResponse.ts';
-import { GeminiService } from '../services/gemini.service.ts';
-import { ScheduledPost } from '../models/schedulePost.models.ts';
+import { asyncHandler } from '../utils/AsyncHandler.js';
+import { ApiError } from '../utils/ApiError.js';
+import { ApiResponse } from '../utils/ApiResponse.js';
+import { GeminiService } from '../services/gemini.service.js';
+import { ScheduledPost } from '../models/schedulePost.models.js';
 
 const geminiService = new GeminiService();
 

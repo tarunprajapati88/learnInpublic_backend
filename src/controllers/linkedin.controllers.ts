@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import axios from 'axios';
 import jwt from 'jsonwebtoken';
-import{ LinkedInIntegration } from '../models/linkedInIntegration.models.ts';
+import{ LinkedInIntegration } from '../models/linkedInIntegration.models.js';
 
 
 

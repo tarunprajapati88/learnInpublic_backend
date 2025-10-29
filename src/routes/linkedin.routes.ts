@@ -5,8 +5,8 @@ import {
     getLinkedInStatus,
     disconnectLinkedIn
 
-} from "../controllers/linkedin.controllers.ts";
-import { verifyJWT } from "../middlewares/auth.middleware.ts";
+} from "../controllers/linkedin.controllers.js";
+import { verifyJWT } from "../middlewares/auth.middleware.js";
 
 const linkedinRoutes = Router();
 

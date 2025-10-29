@@ -1,10 +1,10 @@
 import { Request, Response } from 'express';
-import { User } from '../models/user.models.ts';
-import { asyncHandler } from '../utils/AsyncHandler.ts';
-import { ApiError } from '../utils/ApiError.ts';
-import { ApiResponse } from '../utils/ApiResponse.ts';
-import { TokenService } from '../services/refreshToken.services.ts';
-import { TIME_CONSTANTS } from '../constants.ts';
+import { User } from '../models/user.models.js';
+import { asyncHandler } from '../utils/AsyncHandler.js';
+import { ApiError } from '../utils/ApiError.js';
+import { ApiResponse } from '../utils/ApiResponse.js';
+import { TokenService } from '../services/refreshToken.services.js';
+import { TIME_CONSTANTS } from '../constants.js';
 
 export const registerUser = asyncHandler(async (req: Request, res: Response) => {
   const { username, email, password } = req.body;

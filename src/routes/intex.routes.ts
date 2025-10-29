@@ -1,7 +1,7 @@
 import { Router } from "express"
-import authRoutes from "./auth.routes.ts";
-import linkedinRoutes from "./linkedin.routes.ts";
-import postRoutes from "./post.routes.ts"
+import authRoutes from "./auth.routes.js";
+import linkedinRoutes from "./linkedin.routes.js";
+import postRoutes from "./post.routes.js"
 const routes = Router();
 
 routes.use('/users',authRoutes)

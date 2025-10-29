@@ -1,5 +1,5 @@
 // services/tokenService.ts
-import { User } from '../models/user.models.ts';
+import { User } from '../models/user.models.js';
 import jwt from 'jsonwebtoken';
 
 interface DeviceInfo {

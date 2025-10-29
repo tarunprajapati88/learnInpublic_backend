@@ -8,8 +8,8 @@ import {
     refreshAccessToken,
     getCurrentUser
 } 
-from "../controllers/auth.controllers.ts";
-import { verifyJWT } from "../middlewares/auth.middleware.ts";
+from "../controllers/auth.controllers.js";
+import { verifyJWT } from "../middlewares/auth.middleware.js";
 
 const   authRoutes = Router();
 

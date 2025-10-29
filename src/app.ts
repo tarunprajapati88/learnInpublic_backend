@@ -1,6 +1,6 @@
 import express, { Express ,Request ,Response} from "express";
 import cors from "cors";
-import routes from "./routes/intex.routes.ts";
+import routes from "./routes/intex.routes.js";
 import cookieParser from "cookie-parser";
 
 export const app: Express = express();
