@@ -1,6 +1,17 @@
 // src/services/gemini.service.ts
 
-import { GoogleGenAI } from '@google/genai';
+import { GoogleGenAI, Type } from '@google/genai';
+
+interface LinkedInPost {
+  hook: string;
+  content: string;
+  hashtags: string[];
+  engagementQuestion: string;
+}
+
+interface GeneratedContent {
+  posts: LinkedInPost[];
+}
 
 export class GeminiService {
   private ai: GoogleGenAI;
@@ -16,27 +27,53 @@ export class GeminiService {
   }
 
   async generateLinkedInPosts(userPrompt: string): Promise<string[]> {
-    const systemPrompt = `You are a professional content writer who creates engaging posts on LinkedIn.
+    const systemPrompt = `You are a professional content writer creating authentic LinkedIn posts that feel like real conversations.
 
-INSTRUCTIONS:
-Create LinkedIn posts based on the user's input
-Keep EACH post under 3000 characters
-Use relevant hashtags including #LearnInPublic and topic-specific hashtags
-Make posts interactive - encourage questions and engagement
-If the topic is complex, create 2-3 follow-up posts that dive deeper
-Expand with details, examples, and real-world applications
-Ask questions to engage readers (e.g., "What's your approach to this?")
-Use line breaks and emojis for readability
-Structure: Hook → Value → Call-to-action
-10.post shold be what user have learnt it can be mistakes as well make it more in a learning perspective not as a teacher
-IMPORTANT:
--do not mention post 1 or 2 or 3
-Separate each post with "---POST_SEPARATOR---" and inside that only content nothing other words like post 1 2 or 3
-Create posts that can split in many post like 1-3 if possible  depending on content depth
-if content is more for like multiple post then it should be like this - First post: Introduction/overview
-Following posts: Deep dives into specific aspects
+CORE MISSION:
+Create posts from a "learning in public" perspective - share what the user discovered, struggled with, or realized, not what they're teaching.
 
-User's topic: ${userPrompt}`;
+POST STRUCTURE:
+- Length: 1,200-2,500 characters per post
+- Format: 10-15 short paragraphs (2-3 lines each)
+- Reading level: Conversational, grade 5-7 (simple words)
+- Emojis: 1-6 strategic emojis for visual breaks
+- Hashtags: 3-5 maximum at the end (#LearnInPublic + topic tags)
+
+HOOK FORMULA (First 3 lines - CRITICAL):
+Line 1: Bold statement, contrarian take, or relatable problem
+Line 2: Build curiosity or create tension  
+Line 3: Promise specific value or insight
+❌ Avoid: "I'm excited to share..." "Today I want to talk about..."
+✅ Use: "I wasted 6 hours debugging before I realized..." "Most developers skip this step. Big mistake."
+
+CONTENT APPROACH:
+- Write like you're texting a colleague, not writing a press release
+- Share mistakes, realizations, and "aha moments"
+- Use "I learned" instead of "You should"
+- Include specific examples and real scenarios
+- Break conventional wisdom when relevant
+- Show vulnerability and authenticity
+
+ENGAGEMENT STRATEGY:
+- End with a SPECIFIC question (not "What do you think?")
+- Examples: "Have you encountered this bug? How did you fix it?"
+- Invite contrarian views: "Am I overthinking this?"
+- Reference reader experience: "If you've dealt with this..."
+
+MULTI-POST SERIES (if needed):
+- First post: The problem/realization + why it matters
+- Follow-up posts: Deep dive into solutions, examples, alternatives
+- Each post must stand alone but reference the series
+- Natural transitions between posts
+
+OUTPUT FORMAT:
+Return a JSON object with an array of posts. Each post should have:
+- hook: The first 3 lines (separated by line breaks)
+- content: The full post content (including hook + body)
+- hashtags: Array of 3-5 hashtags (including #LearnInPublic)
+- engagementQuestion: The specific question to end with
+
+User's learning topic: ${userPrompt}`;
 
     try {
       console.log('🤖 Generating LinkedIn posts with Gemini...');
@@ -44,6 +81,41 @@ User's topic: ${userPrompt}`;
       const response = await this.ai.models.generateContent({
         model: 'gemini-2.5-flash-lite',
         contents: systemPrompt,
+        config: {
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: Type.OBJECT,
+            properties: {
+              posts: {
+                type: Type.ARRAY,
+                items: {
+                  type: Type.OBJECT,
+                  properties: {
+                    hook: { 
+                      type: Type.STRING,
+                      description: "First 3 lines that grab attention"
+                    },
+                    content: { 
+                      type: Type.STRING,
+                      description: "Full post content with hook, body, hashtags, and engagement question"
+                    },
+                    hashtags: { 
+                      type: Type.ARRAY,
+                      items: { type: Type.STRING },
+                      description: "3-5 hashtags including #LearnInPublic"
+                    },
+                    engagementQuestion: { 
+                      type: Type.STRING,
+                      description: "Specific question to encourage engagement"
+                    }
+                  },
+                  required: ["hook", "content", "hashtags", "engagementQuestion"]
+                }
+              }
+            },
+            required: ["posts"]
+          }
+        }
       });
 
       // Handle potentially undefined text with proper null checking
@@ -51,29 +123,95 @@ User's topic: ${userPrompt}`;
         throw new Error('No content generated from AI model');
       }
 
-      const text = response.text;
       console.log('✅ Content generated');
 
-      // Split by separator
-      const posts = text
-        .split('---POST_SEPARATOR---')
-        .map((post: string) => post.trim())
-        .filter((post: string) => post.length > 0)
-        .map((post: string) => {
+      // Parse JSON response
+      const generatedContent: GeneratedContent = JSON.parse(response.text);
+      
+      // Extract post contents and validate length
+      const posts = generatedContent.posts
+        .map((post: LinkedInPost) => {
+          const fullContent = post.content;
+          
           // Ensure under 3000 characters
-          if (post.length > 3000) {
-            return post.substring(0, 2997) + '...';
+          if (fullContent.length > 3000) {
+            console.warn(`⚠️ Post exceeded 3000 chars (${fullContent.length}), truncating...`);
+            return fullContent.substring(0, 2997) + '...';
           }
-          return post;
-        });
+          
+          return fullContent;
+        })
+        .filter((post: string) => post.length > 0);
       
       console.log(`✅ Generated ${posts.length} post(s)`);
+      
+      if (posts.length === 0) {
+        throw new Error('No valid posts generated');
+      }
       
       return posts;
       
     } catch (error: any) {
-      console.error('❌ Gemini API error:', error.message);
-      throw new Error('Failed to generate content with AI');
+      console.error('❌ Gemini API error:', error);
+      
+      // More specific error messages
+      if (error.message?.includes('API key')) {
+        throw new Error('Invalid Gemini API key');
+      } else if (error.message?.includes('quota')) {
+        throw new Error('Gemini API quota exceeded');
+      } else if (error.message?.includes('JSON')) {
+        throw new Error('Failed to parse AI response as JSON');
+      }
+      
+      throw new Error(`Failed to generate content: ${error.message || 'Unknown error'}`);
+    }
+  }
+
+  // Optional: Helper method to get structured post data
+  async generateStructuredPosts(userPrompt: string): Promise<LinkedInPost[]> {
+    const systemPrompt = `[Same prompt as above...]
+    
+User's learning topic: ${userPrompt}`;
+
+    try {
+      const response = await this.ai.models.generateContent({
+        model: 'gemini-2.5-flash-lite',
+        contents: systemPrompt,
+        config: {
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: Type.OBJECT,
+            properties: {
+              posts: {
+                type: Type.ARRAY,
+                items: {
+                  type: Type.OBJECT,
+                  properties: {
+                    hook: { type: Type.STRING },
+                    content: { type: Type.STRING },
+                    hashtags: { 
+                      type: Type.ARRAY,
+                      items: { type: Type.STRING }
+                    },
+                    engagementQuestion: { type: Type.STRING }
+                  }
+                }
+              }
+            }
+          }
+        }
+      });
+
+      if (!response.text) {
+        throw new Error('No content generated from AI model');
+      }
+
+      const generatedContent: GeneratedContent = JSON.parse(response.text);
+      return generatedContent.posts;
+      
+    } catch (error: any) {
+      console.error('❌ Error generating structured posts:', error);
+      throw new Error('Failed to generate structured content');
     }
   }
 }
