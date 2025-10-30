@@ -1,10 +1,9 @@
 // src/services/gemini.service.ts
 
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenAI } from '@google/genai';
 
 export class GeminiService {
-  private genAI: GoogleGenerativeAI;
-  private model: any;
+  private ai: GoogleGenAI;
 
   constructor() {
     const apiKey = process.env.GEMINI_API_KEY;
@@ -13,8 +12,7 @@ export class GeminiService {
       throw new Error('GEMINI_API_KEY is not configured');
     }
 
-    this.genAI = new GoogleGenerativeAI(apiKey);
-    this.model = this.genAI.getGenerativeModel({ model: 'gemini-pro' });
+    this.ai = new GoogleGenAI({ apiKey });
   }
 
   async generateLinkedInPosts(userPrompt: string): Promise<string[]> {
@@ -30,6 +28,7 @@ INSTRUCTIONS:
 7. Ask questions to engage readers (e.g., "What's your approach to this?")
 8. Use line breaks and emojis for readability
 9. Structure: Hook → Value → Call-to-action
+10.post shold be what user have learnt it can be mistakes as well make it more in a learning perspective not as a teacher
 
 IMPORTANT: 
 - Separate each post with "---POST_SEPARATOR---"
@@ -42,25 +41,33 @@ User's topic: ${userPrompt}`;
     try {
       console.log('🤖 Generating LinkedIn posts with Gemini...');
       
-      const result = await this.model.generateContent(systemPrompt);
-      const response = await result.response;
-      const text = response.text();
+      const response = await this.ai.models.generateContent({
+        model: 'gemini-2.5-flash-lite',
+        contents: systemPrompt,
+      });
 
+      // Handle potentially undefined text with proper null checking
+      if (!response.text) {
+        throw new Error('No content generated from AI model');
+      }
+
+      const text = response.text;
       console.log('✅ Content generated');
+
       // Split by separator
- const posts = text
-  .split('---POST_SEPARATOR---')
-  .map((post: string) => post.trim())
-  .filter((post: string) => post.length > 0)
-  .map((post: string) => {
-    // Ensure under 3000 characters
-    if (post.length > 3000) {
-      return post.substring(0, 2997) + '...';
-    }
-    return post;
-  });
+      const posts = text
+        .split('---POST_SEPARATOR---')
+        .map((post: string) => post.trim())
+        .filter((post: string) => post.length > 0)
+        .map((post: string) => {
+          // Ensure under 3000 characters
+          if (post.length > 3000) {
+            return post.substring(0, 2997) + '...';
+          }
+          return post;
+        });
       
-       console.log(`✅ Generated ${posts.length} post(s)`);
+      console.log(`✅ Generated ${posts.length} post(s)`);
       
       return posts;
       

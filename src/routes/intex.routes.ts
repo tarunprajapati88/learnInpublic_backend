@@ -6,6 +6,6 @@ const routes = Router();
 
 routes.use('/users',authRoutes)
 routes.use('/linkedin',linkedinRoutes)
-routes.use('/post',postRoutes)
+routes.use('/posts',postRoutes)
 
 export default routes;
