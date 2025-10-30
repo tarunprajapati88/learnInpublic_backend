@@ -56,7 +56,7 @@ export const generatePosts = asyncHandler(async (req: Request, res: Response) =>
     }
 
     console.log(`✅ Created ${scheduledPosts.length} scheduled post(s)`);
-
+     console.log(scheduledPosts);
     return res.status(201).json(
       new ApiResponse(201, 'Posts generated and scheduled successfully', {
         totalPosts: scheduledPosts.length,
